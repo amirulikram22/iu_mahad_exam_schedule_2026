@@ -3,450 +3,848 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>معهد نور العلم بلاهات - لوحة النتائج</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>جدول الاختبارات النهائية</title>
+    
+    <!-- Memuat font Tajawal dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Memuat html2canvas untuk fitur Unduh Gambar -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
-        body { font-family: 'Tajawal', sans-serif; background-color: #f1f5f9; margin: 0; }
-        .option-btn { transition: all 0.2s ease; border: 2px solid #e2e8f0; }
-        .option-btn:hover { border-color: #3b82f6; background-color: #f8fafc; }
-        .selected-option { background-color: #eff6ff !important; border-color: #3b82f6 !important; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
-        .input-field { border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px; width: 100%; outline: none; transition: border-color 0.3s; }
-        .input-field:focus { border-color: #059669; }
-        .logo-box { width: 100px; height: 100px; background: linear-gradient(135deg, #006633 0%, #00a859 100%); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; box-shadow: 0 10px 20px rgba(0,102,51,0.2); }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #059669; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { padding: 12px; text-align: right; border-bottom: 1px solid #e2e8f0; }
-        th { background-color: #f8fafc; color: #64748b; font-weight: bold; }
-        #custom-modal, #login-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 1rem; }
-        .modal-content { background: white; padding: 2rem; border-radius: 1.5rem; max-width: 400px; width: 100%; text-align: center; }
-        .review-card { background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; border-right: 5px solid #cbd5e1; }
-        .review-card.correct { border-right-color: #10b981; }
-        .review-card.incorrect { border-right-color: #ef4444; }
-    </style>
-</head>
-<body class="min-h-screen flex items-center justify-center p-4">
+        /* Pengaturan Dasar */
+        :root {
+            --primary-green: #114232;
+            --secondary-green: #1A533E;
+            --gold-accent: #D4AF37;
+            --bg-color: #F4F7F6;
+            --card-bg: #FFFFFF;
+            --text-main: #2D3748;
+            --text-muted: #718096;
+        }
 
-    <!-- Modal Peringatan -->
-    <div id="custom-modal">
-        <div class="modal-content">
-            <div id="modal-icon" class="text-4xl mb-3">⚠️</div>
-            <h3 id="modal-title" class="text-xl font-bold mb-2">تنبيه</h3>
-            <p id="modal-message" class="text-gray-600 mb-6"></p>
-            <div class="flex gap-3 justify-center">
-                <button id="modal-confirm" class="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold">موافق</button>
-                <button id="modal-cancel" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-bold">إلغاء</button>
-            </div>
-        </div>
-    </div>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-    <!-- Modal Login Guru -->
-    <div id="login-modal">
-        <div class="modal-content shadow-2xl">
-            <div class="text-4xl mb-3">🔐</div>
-            <h3 class="text-xl font-bold mb-2">دخول المعلم</h3>
-            <p class="text-gray-600 mb-4 text-sm">يرجى إدخال اسم المستخدم وكلمة المرور</p>
-            <input type="text" id="teacher-username" class="input-field text-center mb-3" placeholder="اسم المستخدم">
-            <div class="mb-6 relative">
-                <input type="password" id="teacher-pin" class="input-field text-center pl-12" placeholder="كلمة المرور">
-                <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 left-0 w-12 flex items-center justify-center text-gray-400 focus:outline-none">
-                    <svg id="eye-open" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <svg id="eye-closed" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                </button>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="verifyTeacherLogin()" class="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold flex-1">دخول</button>
-                <button onclick="closeLoginModal()" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-bold flex-1">إلغاء</button>
-            </div>
-        </div>
-    </div>
+        /* Kontainer Tombol */
+        .controls {
+            margin-bottom: 25px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
 
-    <!-- 1. Sampul -->
-    <div id="cover-page" class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 flex flex-col items-center">
-        <div class="logo-box"><span class="text-5xl text-white">🕌</span></div>
-        <div class="text-center mb-6">
-            <h2 class="text-lg font-bold text-gray-500 tracking-widest mb-1">PONDOK PESANTREN</h2>
-            <h1 class="text-3xl font-black text-emerald-700 mb-2">NURUL ILMI</h1>
-            <div class="h-1 w-20 bg-emerald-500 mx-auto rounded-full mb-3"></div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-1">معهد نور العلم</h2>
-            <p class="text-sm font-bold text-gray-400">LAHAT - SUMSEL</p>
-        </div>
-        <div class="w-full bg-emerald-50 rounded-2xl p-5 mb-8 text-center">
-            <h3 class="text-emerald-800 font-black text-xl mb-1">الاختبار اليومي الثاني</h3>
-            <p class="text-emerald-600 font-bold">مادة الفقه - الصف الثالث المتوسط</p>
-        </div>
-        <div class="w-full space-y-4 mb-6">
-            <input type="text" id="student-name" class="input-field text-right" placeholder="اسم الطالب...">
-            <input type="text" id="student-class" class="input-field text-right" placeholder="الفصل">
-        </div>
-        <button onclick="startQuiz()" class="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 mb-4"><span>ابدأ الاختبار الآن</span>🚀</button>
-        <button onclick="openLoginModal()" class="text-gray-400 text-xs font-bold">دخول المعلم (Dashboard)</button>
-    </div>
-
-    <!-- 2. Kuis -->
-    <div id="quiz-container" class="hidden max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
-        <div class="bg-emerald-700 p-6 text-white flex justify-between items-center">
-            <button onclick="goToCover()" class="text-xs bg-white/20 px-3 py-2 rounded-lg">🏠 الرئيسية</button>
-            <div class="text-center"><h2 class="text-lg font-bold">معهد نور العلم</h2><p id="display-student-info" class="text-xs opacity-80"></p></div>
-            <div class="w-10"></div>
-        </div>
-        <div class="p-6">
-            <div class="flex justify-between items-center mb-6">
-                <span id="question-counter" class="text-sm font-bold text-emerald-600">السؤال 1 من 20</span>
-                <div class="w-32 bg-gray-200 h-2 rounded-full overflow-hidden"><div id="progress-bar" class="bg-emerald-500 h-full" style="width: 5%"></div></div>
-            </div>
-            <h3 id="question-text" class="text-xl font-bold text-gray-800 mb-6 text-right">جاري التحميل...</h3>
-            <div id="options-container" class="space-y-3"></div>
-            <div class="mt-8 flex gap-3">
-                <button onclick="nextQuestion()" id="next-nav-btn" class="flex-1 bg-emerald-600 text-white py-4 rounded-xl font-bold">التالي</button>
-                <button onclick="prevQuestion()" id="prev-btn" class="flex-1 bg-gray-100 text-gray-600 py-4 rounded-xl font-bold">السابق</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. Hasil -->
-    <div id="result-screen" class="hidden max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 text-center">
-        <div class="text-6xl mb-4">🎖️</div>
-        <h2 class="text-3xl font-black mb-1">النتيجة النهائية</h2>
-        <p id="result-student-name" class="text-emerald-600 font-bold mb-4"></p>
-        <div class="bg-blue-50 py-6 rounded-2xl mb-6"><p id="final-score" class="text-5xl font-black text-blue-600">0 / 20</p></div>
-        <div class="flex flex-col gap-3">
-            <button onclick="loadReview()" class="bg-blue-600 text-white py-4 rounded-xl font-bold">مراجعة الإجابات</button>
-            <button onclick="location.reload()" class="bg-emerald-600 text-white py-4 rounded-xl font-bold">إعادة الاختبار</button>
-        </div>
-    </div>
-
-    <!-- 4. Review -->
-    <div id="review-page" class="hidden max-w-2xl w-full flex flex-col h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden">
-        <div class="bg-emerald-700 p-6 text-white flex justify-between items-center"><h2 class="text-xl font-bold">مراجعة الإجابات 📝</h2><button onclick="switchView('results')" class="bg-white/20 px-4 py-2 rounded-lg font-bold">إغلاق</button></div>
-        <div id="review-list" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50"></div>
-    </div>
-
-    <!-- 5. Dashboard -->
-    <div id="dashboard-page" class="hidden max-w-5xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden mt-8 self-start">
-        <div class="bg-slate-800 p-6 text-white flex justify-between items-center">
-            <h2 class="text-xl font-bold">لوحة النتائج 📊</h2>
-            <div class="flex gap-2">
-                <button id="delete-selected-btn" onclick="deleteSelected()" class="hidden bg-red-600 px-4 py-2 rounded-lg text-xs font-bold">حذف المحدد</button>
-                <button onclick="exportCSV()" class="bg-emerald-600 px-4 py-2 rounded-lg text-xs font-bold">تصدير CSV</button>
-                <button onclick="switchView('cover')" class="bg-gray-600 px-4 py-2 rounded-lg text-xs font-bold">خروج</button>
-            </div>
-        </div>
-        <div class="p-6 overflow-x-auto">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="w-12"><input type="checkbox" onchange="toggleSelectAll(this)"></th>
-                        <th>الاسم</th>
-                        <th>الفصل</th>
-                        <th>الدرجة</th>
-                        <th>التاريخ</th>
-                    </tr>
-                </thead>
-                <tbody id="results-body">
-                    <tr><td colspan="5" class="text-center py-10 text-gray-400">لا توجد نتائج مسجلة</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAYF740-reiHPYvQ9L2dceWwioSPzHI4RY",
-            authDomain: "web-nurul-ilmi.firebaseapp.com",
-            projectId: "web-nurul-ilmi",
-            storageBucket: "web-nurul-ilmi.firebasestorage.app",
-            messagingSenderId: "338149861826",
-            appId: "1:338149861826:web:d633b7c5237477ed830e5b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        /* Desain Dropdown Zona Waktu Khusus (Pencarian) */
+        .custom-tz-wrapper {
+            position: relative;
+            font-family: 'Tajawal', sans-serif;
+            text-align: right;
+            direction: rtl;
+        }
+        .custom-tz-trigger {
+            padding: 12px 20px;
+            border-radius: 50px;
+            border: 2px solid var(--gold-accent);
+            background-color: var(--card-bg);
+            color: var(--primary-green);
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(17, 66, 50, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            min-width: 260px;
+            transition: all 0.3s ease;
+        }
+        .custom-tz-trigger:hover {
+            border-color: var(--primary-green);
+            box-shadow: 0 6px 15px rgba(17, 66, 50, 0.2);
+        }
+        .custom-tz-dropdown {
+            position: absolute;
+            top: 110%;
+            right: 0;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border: 1px solid var(--border-color);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .custom-tz-dropdown.show { display: flex; }
+        .custom-tz-search {
+            padding: 15px;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 14px;
+            outline: none;
+            background: #FAFCFB;
+            color: var(--text-main);
+        }
+        .custom-tz-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .custom-tz-list::-webkit-scrollbar { width: 6px; }
+        .custom-tz-list::-webkit-scrollbar-thumb { background: #CBD5E0; border-radius: 10px; }
         
-        window.db = db;
-        window.auth = auth;
-        window.appId = 'web-nurul-ilmi'; 
-        window.collection = collection;
-        window.addDoc = addDoc;
-        window.deleteDoc = deleteDoc;
-        window.doc = doc;
-        window.getDocs = getDocs;
-        window.serverTimestamp = serverTimestamp;
-        window.onSnapshot = onSnapshot;
+        .tz-option {
+            padding: 12px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-main);
+            transition: background 0.2s;
+        }
+        .tz-option:hover {
+            background: var(--badge-bg);
+            color: var(--primary-green);
+        }
+        .tz-optgroup {
+            padding: 8px 15px;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-muted);
+            background: #F1F5F9;
+        }
+        
+        .btn-download {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(17, 66, 50, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-        async function startAuth() {
-            try {
-                await signInAnonymously(auth);
-            } catch (err) {
-                console.error("Firebase Login Error:", err);
+        .btn-download:hover {
+            transform: translateY(-2px);
+            background-color: var(--secondary-green);
+            box-shadow: 0 6px 15px rgba(17, 66, 50, 0.3);
+        }
+
+        /* Kontainer Utama */
+        .schedule-container {
+            background-color: var(--card-bg);
+            max-width: 650px;
+            width: 100%;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(17, 66, 50, 0.08);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Bagian Header (Judul) */
+        .header {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+            color: #FFFFFF;
+            text-align: center;
+            padding: 40px 30px;
+            position: relative;
+            border-bottom: 6px solid var(--gold-accent);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(circle at top right, rgba(255,255,255,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 36px;
+            font-weight: 800;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .header .university-name {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 16px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            font-size: 16px;
+        }
+
+        /* Desain Timer Hitung Mundur Dinamis */
+        .dynamic-countdown {
+            margin-top: 25px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 16px;
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.5;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            width: fit-content;
+            max-width: 100%;
+        }
+        
+        .timer-numbers {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--gold-accent);
+            letter-spacing: 1px;
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* Bagian Isi Jadwal */
+        .content {
+            padding: 30px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Kartu Mata Kuliah */
+        .subject-card {
+            background-color: #FAFCFB;
+            border: 1px solid #E2E8F0;
+            border-right: 5px solid var(--primary-green);
+            border-radius: 16px;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .subject-card:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+            border-color: var(--primary-green);
+            background-color: #FFFFFF;
+        }
+
+        .subject-info {
+            flex: 1;
+        }
+
+        .subject-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-green);
+            margin-bottom: 8px;
+        }
+
+        /* Status Ujian Otomatis */
+        .status-badge {
+            font-size: 13px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            display: none;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Ujian Selesai */
+        .subject-card.status-finished {
+            opacity: 0.6;
+            filter: grayscale(0.8);
+            border-right-color: #A0AEC0;
+        }
+        .subject-card.status-finished .status-badge {
+            display: inline-block;
+            background-color: #E2E8F0;
+            color: #718096;
+        }
+        
+        /* Ujian Terdekat */
+        .subject-card.status-next {
+            border-color: var(--gold-accent);
+            background-color: var(--badge-bg);
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.15);
+        }
+        .subject-card.status-next .status-badge {
+            display: inline-block;
+            background-color: var(--gold-accent);
+            color: #FFF;
+        }
+        
+        /* Ujian Sedang Berlangsung */
+        .subject-card.status-ongoing {
+            border-color: #38A169;
+            box-shadow: 0 0 15px rgba(56, 161, 105, 0.2);
+        }
+        .subject-card.status-ongoing .status-badge {
+            display: inline-block;
+            background-color: #38A169;
+            color: #FFF;
+            animation: pulseStatus 1.5s infinite;
+        }
+        
+        @keyframes pulseStatus {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .subject-details {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .detail-icon {
+            margin-left: 8px;
+            color: var(--gold-accent);
+            font-size: 18px;
+        }
+
+        .detail-row strong {
+            color: var(--text-main);
+            margin-left: 6px;
+            font-weight: 600;
+        }
+
+        /* Dekorasi Waktu (Lingkaran Kanan) */
+        .time-badge {
+            background-color: rgba(212, 175, 55, 0.1);
+            color: var(--primary-green);
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            text-align: center;
+            min-width: 100px;
+            border: 1px dashed var(--gold-accent);
+        }
+
+        /* Bagian Footer */
+        .footer {
+            text-align: center;
+            padding: 25px;
+            background-color: var(--card-bg);
+            border-top: 1px solid #EDF2F7;
+        }
+
+        .time-note {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .footer-message {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary-green);
+            padding: 10px 24px;
+            background-color: rgba(17, 66, 50, 0.05);
+            border-radius: 30px;
+        }
+
+        /* Responsif untuk layar kecil (HP) */
+        @media (max-width: 600px) {
+            .content {
+                padding: 20px;
+            }
+            .subject-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+                padding: 15px;
+            }
+            .time-badge {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .header h1 {
+                font-size: 28px;
             }
         }
-        startAuth();
+    </style>
+</head>
+<body>
 
-        onAuthStateChanged(auth, user => {
-            window.currentUser = user;
-            if (user && window.currentView === 'dashboard') {
-                listenToResults();
+    <!-- Tombol Unduh & Pemilih Zona Waktu -->
+    <div class="controls" data-html2canvas-ignore="true">
+        <!-- Dropdown Zona Waktu dengan Pencarian -->
+        <div class="custom-tz-wrapper">
+            <div class="custom-tz-trigger" id="tz-trigger">
+                <span id="tz-trigger-text">🇸🇦 توقيت مكة (Arab Saudi)</span>
+                <span>▼</span>
+            </div>
+            <div class="custom-tz-dropdown" id="tz-dropdown">
+                <input type="text" id="tz-search" class="custom-tz-search" placeholder="ابحث عن دولتك (Cari negara)...">
+                <div class="custom-tz-list" id="tz-list">
+                    <!-- Diisi otomatis oleh JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-download" id="downloadBtn">
+            📥 تحميل كصورة (Unduh PNG)
+        </button>
+    </div>
+
+    <div class="schedule-container" id="jadwal-area">
+        <!-- Header -->
+        <div class="header">
+            <h1>جدول الاختبارات النهائية</h1>
+            <p>معهد تعليم اللغة العربية عن بعد</p>
+            <div class="university-name">الجامعة الإسلامية بالمدينة المنورة</div>
+            
+            <!-- Elemen Timer Pintar -->
+            <div class="dynamic-countdown" id="main-countdown">
+                ⏳ جاري الحساب... (Menghitung...)
+            </div>
+        </div>
+
+        <!-- Daftar Jadwal -->
+        <div class="content">
+            
+            <!-- Mata Kuliah 1 -->
+            <div class="subject-card" data-start="2026-05-03T08:00:00+03:00" data-end="2026-05-03T09:00:00+03:00">
+                <div class="subject-info">
+                    <div class="subject-title">التراكيب اللغوية 2</div>
+                    <div class="subject-details">
+                        <div class="detail-row">
+                            <span class="detail-icon">📅</span>
+                            <strong>اليوم:</strong> <span class="date-text">الأحد 16-11-1447 هـ / 3 مايو 2026 م</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="time-badge">
+                    <span class="start-time">08:00 ص</span><br>إلى <span class="end-time">09:00 ص</span>
+                </div>
+            </div>
+
+            <!-- Mata Kuliah 2 -->
+            <div class="subject-card" data-start="2026-05-04T08:00:00+03:00" data-end="2026-05-04T09:00:00+03:00">
+                <div class="subject-info">
+                    <div class="subject-title">القراءة 2</div>
+                    <div class="subject-details">
+                        <div class="detail-row">
+                            <span class="detail-icon">📅</span>
+                            <strong>اليوم:</strong> <span class="date-text">الإثنين 17-11-1447 هـ / 4 مايو 2026 م</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="time-badge">
+                    <span class="start-time">08:00 ص</span><br>إلى <span class="end-time">09:00 ص</span>
+                </div>
+            </div>
+
+            <!-- Mata Kuliah 3 -->
+            <div class="subject-card" data-start="2026-05-05T08:00:00+03:00" data-end="2026-05-05T09:00:00+03:00">
+                <div class="subject-info">
+                    <div class="subject-title">الكتابة 2</div>
+                    <div class="subject-details">
+                        <div class="detail-row">
+                            <span class="detail-icon">📅</span>
+                            <strong>اليوم:</strong> <span class="date-text">الثلاثاء 18-11-1447 هـ / 5 مايو 2026 م</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="time-badge">
+                    <span class="start-time">08:00 ص</span><br>إلى <span class="end-time">09:00 ص</span>
+                </div>
+            </div>
+
+            <!-- Mata Kuliah 4 -->
+            <div class="subject-card" data-start="2026-05-06T08:00:00+03:00" data-end="2026-05-06T09:00:00+03:00">
+                <div class="subject-info">
+                    <div class="subject-title">الاستماع 2</div>
+                    <div class="subject-details">
+                        <div class="detail-row">
+                            <span class="detail-icon">📅</span>
+                            <strong>اليوم:</strong> <span class="date-text">الأربعاء 19-11-1447 هـ / 6 مايو 2026 م</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="time-badge">
+                    <span class="start-time">08:00 ص</span><br>إلى <span class="end-time">09:00 ص</span>
+                </div>
+            </div>
+
+            <!-- Mata Kuliah 5 -->
+            <div class="subject-card" data-start="2026-05-07T08:00:00+03:00" data-end="2026-05-07T09:00:00+03:00">
+                <div class="subject-info">
+                    <div class="subject-title">ثقافة إسلامية 1</div>
+                    <div class="subject-details">
+                        <div class="detail-row">
+                            <span class="detail-icon">📅</span>
+                            <strong>اليوم:</strong> <span class="date-text">الخميس 20-11-1447 هـ / 7 مايو 2026 م</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="time-badge">
+                    <span class="start-time">08:00 ص</span><br>إلى <span class="end-time">09:00 ص</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="time-note" id="time-zone-note">
+                🌍 * جميع الأوقات بتوقيت مكة المكرمة (Waktu Arab Saudi)
+            </div>
+            <div class="footer-message">
+                <span>بالتوفيق والنجاح!</span>
+                <span>🎓</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logika -->
+    <script>
+        // --- 1. Logika Zona Waktu مع البحث (dengan Pencarian) ---
+        const timezonesData = [
+            { val: 'Asia/Riyadh', text: '🇸🇦 توقيت مكة (Arab Saudi / Makkah Time)' },
+            { val: 'local', text: '⏱️ توقيتك المحلي (Local Time - Automatic)' },
+            
+            { type: 'group', text: '🌍 إندونيسيا وماليزيا (Indonesia & Malaysia)' },
+            { val: 'Asia/Jakarta', text: '🇮🇩 إندونيسيا - WIB (Indonesia - WIB)' },
+            { val: 'Asia/Makassar', text: '🇮🇩 إندونيسيا - WITA (Indonesia - WITA)' },
+            { val: 'Asia/Jayapura', text: '🇮🇩 إندونيسيا - WIT (Indonesia - WIT)' },
+            { val: 'Asia/Kuala_Lumpur', text: '🇲🇾 ماليزيا (Malaysia)' },
+            { val: 'Asia/Brunei', text: '🇧🇳 بروناي (Brunei Darussalam)' },
+            { val: 'Asia/Singapore', text: '🇸🇬 سنغافورة (Singapore)' },
+
+            { type: 'group', text: '🌍 الشرق الأوسط وإفريقيا (Middle East & Africa)' },
+            { val: 'Africa/Cairo', text: '🇪🇬 مصر (Egypt / مصر)' },
+            { val: 'Asia/Dubai', text: '🇦🇪 الإمارات (UAE / الإمارات)' },
+            { val: 'Asia/Qatar', text: '🇶🇦 قطر (Qatar / قطر)' },
+            { val: 'Asia/Kuwait', text: '🇰🇼 الكويت (Kuwait / الكويت)' },
+            { val: 'Asia/Muscat', text: '🇴🇲 عمان (Oman / عُمان)' },
+            { val: 'Asia/Bahrain', text: '🇧🇭 البحرين (Bahrain / البحرين)' },
+            { val: 'Asia/Aden', text: '🇾🇪 اليمن (Yemen / اليمن)' },
+            { val: 'Asia/Amman', text: '🇯🇴 الأردن (Jordan / الأردن)' },
+            { val: 'Asia/Gaza', text: '🇵🇸 فلسطين (Palestine / فلسطين)' },
+            { val: 'Asia/Baghdad', text: '🇮🇶 العراق (Iraq / العراق)' },
+            { val: 'Asia/Damascus', text: '🇸🇾 سوريا (Syria / سوريا)' },
+            { val: 'Asia/Beirut', text: '🇱🇧 لبنان (Lebanon / لبنان)' },
+            { val: 'Europe/Istanbul', text: '🇹🇷 تركيا (Turkey / Türkiye)' },
+            { val: 'Africa/Casablanca', text: '🇲🇦 المغرب (Morocco / Maroc)' },
+            { val: 'Africa/Algiers', text: '🇩🇿 الجزائر (Algeria / Algérie)' },
+            { val: 'Africa/Tunis', text: '🇹🇳 تونس (Tunisia / Tunisie)' },
+            { val: 'Africa/Tripoli', text: '🇱🇾 ليبيا (Libya / ليبيا)' },
+            { val: 'Africa/Khartoum', text: '🇸🇩 السودان (Sudan / السودان)' },
+            { val: 'Africa/Mogadishu', text: '🇸🇴 الصومال (Somalia / Soomaaliya)' },
+            { val: 'Africa/Djibouti', text: '🇩🇯 جيبوتي (Djibouti)' },
+            { val: 'Africa/Nouakchott', text: '🇲🇷 موريتانيا (Mauritania / Mauritanie)' },
+            { val: 'Africa/Lagos', text: '🇳🇬 نيجيريا (Nigeria)' },
+            { val: 'Africa/Dakar', text: '🇸🇳 السنغال (Senegal / Sénégal)' },
+            { val: 'Africa/Johannesburg', text: '🇿🇦 جنوب إفريقيا (South Africa)' },
+
+            { type: 'group', text: '🌏 آسيا والمحيط الهادئ (Asia & Pacific)' },
+            { val: 'Asia/Bangkok', text: '🇹🇭 تايلاند (Thailand / ประเทศไทย)' },
+            { val: 'Asia/Manila', text: '🇵🇭 الفلبين (Philippines / Pilipinas)' },
+            { val: 'Asia/Karachi', text: '🇵🇰 باكستان (Pakistan / پاکستان)' },
+            { val: 'Asia/Kolkata', text: '🇮🇳 الهند (India / भारत)' },
+            { val: 'Asia/Dhaka', text: '🇧🇩 بنغلاديش (Bangladesh / বাংলাদেশ)' },
+            { val: 'Asia/Colombo', text: '🇱🇰 سريلانكا (Sri Lanka / ශ්‍රී ලංකාව)' },
+            { val: 'Asia/Kabul', text: '🇦🇫 أفغانستان (Afghanistan / افغانستان)' },
+            { val: 'Asia/Tokyo', text: '🇯🇵 اليابان (Japan / 日本)' },
+            { val: 'Asia/Seoul', text: '🇰🇷 كوريا الجنوبية (South Korea / 대한민국)' },
+            { val: 'Asia/Shanghai', text: '🇨🇳 الصين (China / 中国)' },
+            { val: 'Australia/Sydney', text: '🇦🇺 أستراليا - سيدني (Australia - Sydney)' },
+            { val: 'Australia/Perth', text: '🇦🇺 أستراليا - بيرث (Australia - Perth)' },
+
+            { type: 'group', text: '🌍 أوروبا والأمريكتين (Europe & Americas)' },
+            { val: 'Europe/London', text: '🇬🇧 بريطانيا (United Kingdom)' },
+            { val: 'Europe/Paris', text: '🇫🇷 فرنسا (France)' },
+            { val: 'Europe/Berlin', text: '🇩🇪 ألمانيا (Germany / Deutschland)' },
+            { val: 'Europe/Madrid', text: '🇪🇸 إسبانيا (Spain / España)' },
+            { val: 'Europe/Rome', text: '🇮🇹 إيطاليا (Italy / Italia)' },
+            { val: 'Europe/Amsterdam', text: '🇳🇱 هولندا (Netherlands / Nederland)' },
+            { val: 'Europe/Sarajevo', text: '🇧🇦 البوسنة والهرسك (Bosnia and Herzegovina / BiH)' },
+            { val: 'Europe/Moscow', text: '🇷🇺 روسيا - موسكو (Russia / Россия - Moscow)' },
+            { val: 'America/New_York', text: '🇺🇸 أمريكا - نيويورك (USA - New York/EST)' },
+            { val: 'America/Chicago', text: '🇺🇸 أمريكا - شيكاغو (USA - Chicago/CST)' },
+            { val: 'America/Los_Angeles', text: '🇺🇸 أمريكا - لوس أنجلوس (USA - Los Angeles/PST)' },
+            { val: 'America/Toronto', text: '🇨🇦 كندا - تورونتو (Canada - Toronto)' },
+            { val: 'America/Sao_Paulo', text: '🇧🇷 البرازيل (Brazil / Brasil)' },
+            { val: 'America/Argentina/Buenos_Aires', text: '🇦🇷 الأرجنتين (Argentina)' },
+            { val: 'America/Mexico_City', text: '🇲🇽 المكسيك (Mexico / México)' },
+
+            { type: 'group', text: '🌐 مناطق أخرى (Other Time Zones)' }
+        ];
+
+        try {
+            const allTzs = Intl.supportedValuesOf('timeZone');
+            allTzs.forEach(tz => {
+                // Mencegah duplikasi jika zona waktu sudah ada di daftar utama di atas
+                if (!timezonesData.some(item => item.val === tz)) {
+                    timezonesData.push({ val: tz, text: `📍 ${tz.replace(/\//g, ' / ').replace(/_/g, ' ')}` });
+                }
+            });
+        } catch(e) {}
+
+        function renderTzList(filterText = '') {
+            const list = document.getElementById('tz-list');
+            let html = '';
+            timezonesData.forEach(item => {
+                if (item.type === 'group') {
+                    if (!filterText) html += `<div class="tz-optgroup">${item.text}</div>`;
+                } else {
+                    if (item.text.toLowerCase().includes(filterText.toLowerCase()) || item.val.toLowerCase().includes(filterText.toLowerCase())) {
+                        html += `<div class="tz-option" data-value="${item.val}">${item.text}</div>`;
+                    }
+                }
+            });
+            if (!html) html = '<div class="tz-option" style="color:#E53E3E; text-align:center;">❌ لا توجد نتائج (Tidak ditemukan)</div>';
+            list.innerHTML = html;
+
+            document.querySelectorAll('.tz-option').forEach(opt => {
+                if(!opt.getAttribute('data-value')) return;
+                opt.addEventListener('click', function() {
+                    const val = this.getAttribute('data-value');
+                    const text = this.innerText;
+                    document.getElementById('tz-trigger-text').innerText = text;
+                    document.getElementById('tz-dropdown').classList.remove('show');
+                    applyTimezone(val, text);
+                });
+            });
+        }
+
+        const tzTrigger = document.getElementById('tz-trigger');
+        const tzDropdown = document.getElementById('tz-dropdown');
+        const tzSearch = document.getElementById('tz-search');
+
+        tzTrigger.addEventListener('click', () => {
+            tzDropdown.classList.toggle('show');
+            if (tzDropdown.classList.contains('show')) {
+                tzSearch.focus();
+                tzSearch.value = ''; 
+                renderTzList(); 
             }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-tz-wrapper')) {
+                tzDropdown.classList.remove('show');
+            }
+        });
+
+        tzSearch.addEventListener('input', (e) => renderTzList(e.target.value));
+
+        renderTzList(); // Inisialisasi daftar menu
+
+        function applyTimezone(selectedTz, selectedTextFull) {
+            let selectedText = selectedTextFull.split('(')[0].trim(); 
+            if (selectedTz === 'local') {
+                selectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const localCity = selectedTz.split('/')[1] ? selectedTz.split('/')[1].replace(/_/g, ' ') : selectedTz;
+                selectedText = `توقيتك المحلي (${localCity})`;
+            }
+
+            document.getElementById('time-zone-note').innerHTML = `🌍 * جميع الأوقات معروضة بتوقيت: <strong>${selectedText}</strong>`;
+
+            document.querySelectorAll('.subject-card').forEach(card => {
+                const startIso = card.getAttribute('data-start');
+                const endIso = card.getAttribute('data-end');
+                if (!startIso || !endIso) return;
+                
+                const startDate = new Date(startIso);
+                const endDate = new Date(endIso);
+
+                const dayName = new Intl.DateTimeFormat('ar-u-nu-latn', { timeZone: selectedTz, weekday: 'long' }).format(startDate);
+                const gregorianDate = new Intl.DateTimeFormat('ar-u-nu-latn', { timeZone: selectedTz, day: 'numeric', month: 'long', year: 'numeric' }).format(startDate);
+                let hijriDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { timeZone: selectedTz, day: '2-digit', month: '2-digit', year: 'numeric' }).format(startDate);
+                hijriDate = hijriDate.replace(/ هـ| AH|هـ/gi, '').replace(/\//g, '-').trim();
+                
+                let startTime = new Intl.DateTimeFormat('ar-u-nu-latn', { timeZone: selectedTz, hour: '2-digit', minute: '2-digit', hour12: true }).format(startDate);
+                let endTime = new Intl.DateTimeFormat('ar-u-nu-latn', { timeZone: selectedTz, hour: '2-digit', minute: '2-digit', hour12: true }).format(endDate);
+
+                startTime = startTime.replace(/AM/i, 'ص').replace(/PM/i, 'م');
+                endTime = endTime.replace(/AM/i, 'ص').replace(/PM/i, 'م');
+
+                card.querySelector('.date-text').innerHTML = `${dayName} ${hijriDate} هـ / ${gregorianDate} م`;
+                card.querySelector('.start-time').innerHTML = startTime;
+                card.querySelector('.end-time').innerHTML = endTime;
+            });
+        }
+
+        // --- 2. Logika Status Ujian & Hitung Mundur Dinamis ---
+        let targetExamDate = null;
+        let targetExamName = "";
+
+        function initExamStatus() {
+            // Sisipkan elemen penanda (badge) ke dalam setiap judul mata kuliah
+            document.querySelectorAll('.subject-title').forEach(title => {
+                if (!title.querySelector('.status-badge')) {
+                    // Bungkus teks asli dengan span agar mudah diambil nanti
+                    const originalText = title.innerHTML;
+                    title.innerHTML = `<span>${originalText}</span><span class="status-badge"></span>`;
+                    title.style.display = 'flex';
+                    title.style.alignItems = 'center';
+                    title.style.gap = '10px';
+                    title.style.flexWrap = 'wrap';
+                }
+            });
+            
+            // Jalankan pemeriksaan status pertama kali
+            updateExamStatus();
+        }
+
+        function updateExamStatus() {
+            const now = new Date();
+            let nextFound = false;
+            targetExamDate = null; // Reset target
+
+            document.querySelectorAll('.subject-card').forEach(card => {
+                const startStr = card.getAttribute('data-start');
+                const endStr = card.getAttribute('data-end');
+                if (!startStr || !endStr) return;
+
+                const start = new Date(startStr);
+                const end = new Date(endStr);
+                const badge = card.querySelector('.status-badge');
+                const titleText = card.querySelector('.subject-title span').textContent.trim();
+
+                // Bersihkan class status sebelumnya
+                card.classList.remove('status-finished', 'status-next', 'status-ongoing');
+                badge.style.display = 'none';
+
+                if (now > end) {
+                    // Ujian sudah selesai
+                    card.classList.add('status-finished');
+                    badge.innerHTML = '✓ انتهى';
+                    badge.style.display = 'inline-block';
+                } else if (now >= start && now <= end) {
+                    // Ujian sedang berlangsung
+                    card.classList.add('status-ongoing');
+                    badge.innerHTML = '🔴 جاري الآن';
+                    badge.style.display = 'inline-block';
+                } else if (now < start && !nextFound) {
+                    // Ujian terdekat yang akan datang
+                    card.classList.add('status-next');
+                    badge.innerHTML = '✨ الاختبار القادم';
+                    badge.style.display = 'inline-block';
+                    nextFound = true; // Tandai agar ujian yang di bawahnya tidak ikut menyala
+                    
+                    targetExamDate = start; // Set target hitung mundur
+                    targetExamName = titleText;
+                }
+            });
+        }
+        
+        // Mulai pelacak status
+        initExamStatus();
+
+        // --- Fitur Hitung Mundur Berjalan Setiap 1 Detik ---
+        setInterval(() => {
+            const cdBox = document.getElementById('main-countdown');
+            if (!cdBox) return;
+
+            if (!targetExamDate) {
+                cdBox.innerHTML = "🎉 اكتملت جميع الاختبارات! (Semua ujian selesai!)";
+                cdBox.style.backgroundColor = "rgba(46, 204, 113, 0.2)";
+                cdBox.style.borderColor = "rgba(46, 204, 113, 0.5)";
+                return;
+            }
+
+            const now = new Date().getTime();
+            const distance = targetExamDate.getTime() - now;
+
+            // Jika waktu hitung mundur habis, perbarui status lagi
+            if (distance < 0) {
+                updateExamStatus(); 
+                return;
+            }
+
+            // Hitung sisa hari, jam, menit, detik
+            const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+            let timeStr = `${h}س ${m}د ${s}ث`;
+            if (d > 0) {
+                timeStr = `${d} يوم و ` + timeStr;
+            }
+
+            cdBox.innerHTML = `⏳ يبدأ اختبار (<strong>${targetExamName}</strong>) خلال:<br><span class="timer-numbers">${timeStr}</span>`;
+        }, 1000);
+
+        // --- 3. Logika Unduh Gambar ---
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            
+            // Ubah teks saat memproses
+            btn.innerHTML = '⏳ جاري التحميل... (Memproses...)';
+            
+            // Targetkan hanya area jadwal
+            const targetElement = document.getElementById('jadwal-area');
+            
+            // Render elemen ke kanvas
+            html2canvas(targetElement, {
+                scale: 2, // Kualitas gambar 2x lipat (HD)
+                useCORS: true,
+                backgroundColor: '#FFFFFF' // Pastikan background belakang bersih
+            }).then(canvas => {
+                // Buat link unduhan rahasia
+                const link = document.createElement('a');
+                link.download = 'Jadwal_Ujian_Akhir.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                // Kembalikan teks tombol ke semula
+                btn.innerHTML = originalText;
+            }).catch(err => {
+                console.error("Gagal mengunduh:", err);
+                btn.innerHTML = originalText;
+                alert("Mohon maaf, terjadi kesalahan saat menyimpan gambar.");
+            });
         });
     </script>
 
-    <script>
-        const questions = [
-            { q: "المعنى اللغوي للجهاد هو:", a: ["القتال بالسلاح فقط.", "بذل الجهد والطاقة من قول أو فعل.", "السفر لطلب العلم.", "الصبر على المصائب."], c: 1 },
-            { q: "ينقسم الجهاد في الإسلام إلى ثلاثة أنواع، والمقصود من دراستنا في الكتاب هو الجهاد بمعنى:", a: ["جهاد المال.", "جهاد النفس.", "القتال في سبيل الله لإعلاء كلمة الله.", "جهاد اللسان."], c: 2 },
-            { q: "ما حكم الجهاد في سبيل الله؟", a: ["فرض عين على كل مسلم.", "فرض كفاية (إذا قام به البعض سقط عن الآخرين).", "سنة مؤكدة.", "مستحب فقط."], c: 1 },
-            { q: "يصبح الجهاد \"فرض عين\" في حالات، إلا:", a: ["إذا حاصر العدو البلد.", "إذا أمر ولي الأمر (الحاكم) الناس بالجهاد.", "إذا لم يحضر المسلم ساحة القتال.", "إذا احتل العدو البلد."], c: 2 },
-            { q: "من شروط وجوب الجهاد في سبيل الله:", a: ["الغنى وكثرة المال.", "العقل، والذكورة، والبلوغ، وإذن ولي الأمر.", "السفر لبلاد بعيدة.", "حفظ القرآن الكريم كاملاً."], c: 1 },
-            { q: "جهاد النفس يكون بأربع أمور، إلا:", a: ["تعلم العلم الضار.", "العمل بالعلم.", "دعوة الناس إلى العلم.", "الصبر على الأذى في سبيل الدعوة إلى العلم."], c: 0 },
-            { q: "من آداب الجهاد في الإسلام هي:", a: ["قطع الأشجار وتخريب المباني.", "قتل النساء والأطفال والشيوخ.", "قتل الرهبان في صوامعهم.", "المعاملة بالمثل وعدم الاعتداء."], c: 3 },
-            { q: "الغاية الأساسية من الجهاد في الإسلام هي:", a: ["السيطرة على خيرات الشعوب.", "الانتقام من الآخرين.", "إعلاء كلمة الله ودفع الظلم والعدوان.", "الشهرة ونيل المديح."], c: 2 },
-            { q: "ما حكم الجهاد على النساء؟", a: ["واجب.", "سنة.", "لا يجب.", "مكروه."], c: 2 },
-            { q: "بعض العبادة التي سماها النبي صلى الله عليه وسلم جهاداً هي:", a: ["بر الوالدين.", "الحج.", "جواب (أ) و (ب) كلاهما صحيح.", "لا يوجد جواب صحيح."], c: 2 },
-            { q: "من أعظم ثمار الجهاد في سبيل الله بالنسبة للفرد نيل رضا الله والفوز بالجنة.", a: ["صح", "خطأ"], c: 0 },
-            { q: "جهاد الشيطان يكون بالخوف منه دائماً.", a: ["صح", "خطأ"], c: 1 },
-            { q: "لا يشترط لخروج الابن للجهاد التطوعي إذن الوالدين.", a: ["صح", "خطأ"], c: 1 },
-            { q: "لا يجب الإخلاص لله والصبر على المجاهد.", a: ["صح", "خطأ"], c: 1 },
-            { q: "من مات في الجهاد في سبيل الله يسمى بشهيد.", a: ["صح", "خطأ"], c: 0 },
-            { q: "يجوز قتل من لا يشارك في القتال.", a: ["صح", "خطأ"], c: 1 },
-            { q: "من الجهاد في سبيل الله القتال دفاعاً عن الأهل.", a: ["صح", "خطأ"], c: 0 },
-            { q: "يجوز لأحد الجهاد بدون إذن ولي الأمر.", a: ["صح", "خطأ"], c: 1 },
-            { q: "جهاد المرأة الحج والعمرة.", a: ["صح", "خطأ"], c: 0 },
-            { q: "من معاني الجهاد بذل الجهد في الاستقامة على أمر الله.", a: ["صح", "خطأ"], c: 0 }
-        ];
-
-        let idx = 0;
-        let userAnswers = new Array(questions.length).fill(null);
-        let studentData = { name: "", class: "" };
-        let allResults = [];
-        let selectedResults = new Set();
-        let resultsUnsubscribe = null;
-
-        function switchView(view) {
-            window.currentView = view;
-            ['cover-page', 'quiz-container', 'result-screen', 'review-page', 'dashboard-page'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            if(view === 'cover') document.getElementById('cover-page').classList.remove('hidden');
-            if(view === 'quiz') document.getElementById('quiz-container').classList.remove('hidden');
-            if(view === 'results') document.getElementById('result-screen').classList.remove('hidden');
-            if(view === 'review') document.getElementById('review-page').classList.remove('hidden');
-            if(view === 'dashboard') document.getElementById('dashboard-page').classList.remove('hidden');
-        }
-
-        function startQuiz() {
-            const name = document.getElementById('student-name').value.trim();
-            const cls = document.getElementById('student-class').value.trim();
-            if(!name || !cls) return showModal("تنبيه", "يرjى إدخال الاسم والفصل");
-            studentData = { name, class: cls };
-            document.getElementById('display-student-info').innerText = `الطالب: ${name} | الفصل: ${cls}`;
-            idx = 0; userAnswers.fill(null);
-            switchView('quiz'); loadQuestion();
-        }
-
-        function loadQuestion() {
-            const q = questions[idx];
-            const labels = ['أ', 'ب', 'ج', 'د'];
-            document.getElementById('question-text').innerText = q.q;
-            document.getElementById('question-counter').innerText = `السؤال ${idx+1} من ${questions.length}`;
-            document.getElementById('progress-bar').style.width = `${((idx+1)/questions.length)*100}%`;
-            const container = document.getElementById('options-container');
-            container.innerHTML = '';
-            
-            q.a.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.className = `option-btn w-full text-right p-4 rounded-xl font-bold flex items-start gap-2 ${userAnswers[idx] === i ? 'selected-option' : ''}`;
-                
-                // Menambahkan label أ ب ج د untuk soal nomor 1-10 (index 0-9)
-                if (idx < 10) {
-                    btn.innerHTML = `<span class="text-emerald-600 ml-2 font-black">${labels[i]})</span> <span>${opt}</span>`;
-                } else {
-                    btn.innerText = opt;
-                }
-                
-                btn.onclick = () => { userAnswers[idx] = i; loadQuestion(); };
-                container.appendChild(btn);
-            });
-            document.getElementById('prev-btn').disabled = idx === 0;
-            document.getElementById('next-nav-btn').innerText = idx === questions.length - 1 ? 'إرسال' : 'التالي';
-        }
-
-        function nextQuestion() {
-            if(idx < questions.length - 1) { idx++; loadQuestion(); }
-            else submitQuiz();
-        }
-
-        function prevQuestion() { if(idx > 0) { idx--; loadQuestion(); } }
-
-        async function submitQuiz() {
-            const unanswered = userAnswers.filter(a => a === null).length;
-            if(unanswered > 0) return showModal("تنبيه", `بقي ${unanswered} سؤالاً. هل تريد الإرسال؟`, '❓', "نعم", true, performSubmission);
-            performSubmission();
-        }
-
-        async function performSubmission() {
-            const btn = document.getElementById('next-nav-btn');
-            btn.disabled = true; btn.innerHTML = '<span class="loader"></span>';
-            
-            if (!window.currentUser) {
-                try {
-                    await window.signInAnonymously(window.auth);
-                } catch (e) {
-                    showModal("خطأ", "لم يتم تسجيل الدخول بعد. يرجى الانتظار.");
-                    btn.disabled = false; btn.innerText = "إرسال";
-                    return;
-                }
-            }
-
-            let score = 0; 
-            userAnswers.forEach((ans, i) => { if(ans === questions[i].c) score++; });
-            
-            try {
-                const resultsRef = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'quiz_results');
-                await window.addDoc(resultsRef, { 
-                    student_name: studentData.name, 
-                    student_class: studentData.class, 
-                    score, 
-                    total: questions.length, 
-                    timestamp: window.serverTimestamp() 
-                });
-                document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
-                document.getElementById('result-student-name').innerText = studentData.name;
-                switchView('results');
-            } catch(e) { 
-                console.error("Submission Error:", e);
-                showModal("خطأ", "فشل الإرسال: " + e.message); 
-                btn.disabled = false; btn.innerText = "إرسال"; 
-            }
-        }
-
-        function loadReview() {
-            const container = document.getElementById('review-list');
-            const labels = ['أ', 'ب', 'ج', 'د'];
-            container.innerHTML = questions.map((q, i) => {
-                const isCorrect = userAnswers[i] === q.c;
-                let studentAns = userAnswers[i] !== null ? q.a[userAnswers[i]] : 'لم تجب';
-                let correctAns = q.a[q.c];
-                
-                // Menambahkan label pada tampilan review
-                if (i < 10) {
-                    if (userAnswers[i] !== null) studentAns = `${labels[userAnswers[i]]}) ${studentAns}`;
-                    correctAns = `${labels[q.c]}) ${correctAns}`;
-                }
-
-                return `<div class="review-card ${isCorrect ? 'correct' : 'incorrect'} shadow-sm">
-                    <p class="font-bold mb-2">${q.q}</p>
-                    <p class="text-sm">إجابتك: ${studentAns}</p>
-                    ${!isCorrect ? `<p class="text-sm text-emerald-600 font-bold">الصحيحة: ${correctAns}</p>` : ''}
-                </div>`;
-            }).join('');
-            switchView('review');
-        }
-
-        function listenToResults() {
-            if (!window.currentUser) return;
-            if (resultsUnsubscribe) resultsUnsubscribe();
-
-            const ref = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'quiz_results');
-            resultsUnsubscribe = window.onSnapshot(ref, snap => {
-                allResults = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-                const body = document.getElementById('results-body');
-                if (allResults.length === 0) {
-                    body.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-gray-400">لا توجد نتائج مسجلة</td></tr>';
-                } else {
-                    body.innerHTML = allResults.map(res => `<tr>
-                        <td><input type="checkbox" onchange="toggleSelect('${res.id}', this)" class="w-4 h-4"></td>
-                        <td class="font-bold text-slate-700">${res.student_name}</td>
-                        <td>${res.student_class}</td>
-                        <td class="font-bold text-emerald-600">${res.score}/${res.total}</td>
-                        <td class="text-xs text-gray-400">${res.timestamp ? new Date(res.timestamp.seconds*1000).toLocaleString('ar-EG') : '...'}</td>
-                    </tr>`).join('');
-                }
-            }, err => {
-                console.error("Firestore Listen Error:", err);
-            });
-        }
-
-        function toggleSelect(id, cb) { 
-            if(cb.checked) selectedResults.add(id); 
-            else selectedResults.delete(id); 
-            document.getElementById('delete-selected-btn').classList.toggle('hidden', selectedResults.size === 0); 
-        }
-
-        function toggleSelectAll(masterCb) {
-            const checkboxes = document.querySelectorAll('#results-body input[type="checkbox"]');
-            checkboxes.forEach(cb => {
-                cb.checked = masterCb.checked;
-            });
-            selectedResults.clear();
-            if (masterCb.checked) {
-                allResults.forEach(r => selectedResults.add(r.id));
-            }
-            document.getElementById('delete-selected-btn').classList.toggle('hidden', selectedResults.size === 0);
-        }
-
-        async function deleteSelected() {
-            if(!confirm(`حذف ${selectedResults.size} نتيجة؟`)) return;
-            for(const id of selectedResults) {
-                try {
-                    await window.deleteDoc(window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'quiz_results', id));
-                } catch (e) {
-                    console.error("Delete error:", e);
-                }
-            }
-            selectedResults.clear();
-            document.getElementById('delete-selected-btn').classList.add('hidden');
-        }
-
-        function exportCSV() {
-            if (allResults.length === 0) return;
-            let csv = "\uFEFFالاسم,الفصل,الدرجة,التاريخ\n";
-            allResults.forEach(r => {
-                const date = r.timestamp ? new Date(r.timestamp.seconds*1000).toLocaleString('ar-EG').replace(/,/g, '') : '';
-                csv += `"${r.student_name}","${r.student_class}","${r.score}/${r.total}","${date}"\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); 
-            link.href = URL.createObjectURL(blob); 
-            link.download = `نتائج_اختبار_الجهاد_${new Date().toLocaleDateString()}.csv`; 
-            link.click();
-        }
-
-        function verifyTeacherLogin() {
-            const user = document.getElementById('teacher-username').value;
-            const pin = document.getElementById('teacher-pin').value;
-            if(user === "Ikram" && pin === "22") {
-                closeLoginModal(); 
-                switchView('dashboard');
-                listenToResults();
-            } else {
-                alert("بيانات الدخول غير صحيحة");
-            }
-        }
-
-        function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
-        function closeLoginModal() { document.getElementById('login-modal').style.display = 'none'; }
-        function togglePasswordVisibility() {
-            const pin = document.getElementById('teacher-pin');
-            pin.type = pin.type === 'password' ? 'text' : 'password';
-            document.getElementById('eye-open').classList.toggle('hidden');
-            document.getElementById('eye-closed').classList.toggle('hidden');
-        }
-        function showModal(t, m, i='⚠️', c='موافق', s=false, onC=null) {
-            const mod = document.getElementById('custom-modal');
-            document.getElementById('modal-title').innerText=t; 
-            document.getElementById('modal-message').innerText=m; 
-            document.getElementById('modal-icon').innerText=i;
-            document.getElementById('modal-cancel').style.display = s ? 'block' : 'none';
-            mod.style.display = 'flex';
-            document.getElementById('modal-confirm').onclick = () => { mod.style.display='none'; if(onC) onC(); };
-            document.getElementById('modal-cancel').onclick = () => mod.style.display='none';
-        }
-        function goToCover() { switchView('cover'); }
-    </script>
 </body>
 </html>
